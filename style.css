@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css?family=Lato&display=swap');
+
+body {
+  font-family: 'Lato', sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Custom styling for money display */
+.money {
+  font-size: 24px;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+
+.money.plus {
+  color: #198754;
+  /* Bootstrap success color */
+}
+
+.money.minus {
+  color: #dc3545;
+  /* Bootstrap danger color */
+}
+
+/* List styling */
+.list {
+  padding: 0;
+}
+
+.list-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  padding: 1rem;
+  border-right-width: 5px !important;
+}
+
+.list-group-item.plus {
+  border-right-color: #198754;
+}
+
+.list-group-item.minus {
+  border-right-color: #dc3545;
+}
+
+/* Delete button styling */
+.delete-btn {
+  cursor: pointer;
+  background-color: #dc3545;
+  border: 0;
+  color: #fff;
+  font-size: 1.2rem;
+  line-height: 20px;
+  padding: 2px 8px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translate(-100%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 3px;
+}
+
+.list-group-item:hover .delete-btn {
+  opacity: 1;
+}
+
+/* Balance display */
+#balance {
+  font-weight: 500;
+}
+
+/* Card hover effects */
+.card {
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* Custom navbar styling */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .money {
+    font-size: 20px;
+  }
+
+  .display-4 {
+    font-size: 2.5rem;
+  }
+
+  .delete-btn {
+    opacity: 1;
+    transform: none;
+    position: static;
+    padding: 4px 8px;
+    margin-left: 10px;
+  }
+}

@@ -1,0 +1,29 @@
+# Node modules (if you add node-based tooling)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+*.log
+
+# Environment files
+.env
+
+# VS Code
+.vscode/
+
+# Mac thumbnail database
+._*
+
+# Windows thumbnail cache
+Thumbs.db
+
+# Ignore local IDE/workspace files
+.idea/
+
+# Built files (if any build process is added later)
+dist/
+build/
