@@ -47,9 +47,8 @@ function groupTransactionsByDate(transactions) {
     });
 
     transactions.forEach(transaction => {
-        // Fallback to ISO now if date missing/invalid
-        const rawDate = transaction && transaction.date ? transaction.date : new Date().toISOString();
-        const date = String(rawDate).split('T')[0]; // Get just the date part
+        // Handle both new date-only format and legacy ISO strings
+        const date = transaction && transaction.date ? transaction.date : new Date().toISOString().slice(0, 10);
         if (!groups[date]) {
             groups[date] = [];
         }
@@ -64,21 +63,173 @@ function createTransactionElement(transaction) {
     const sign = transaction.amount < 0 ? '-' : '+';
 
     return `
-    <div class="list-group-item list-group-item-action ${transaction.amount < 0 ? 'minus' : 'plus'}">
+    <div class="list-group-item list-group-item-action ${transaction.amount < 0 ? 'minus' : 'plus'}" id="transaction-${transaction.id}">
       <div class="d-flex justify-content-between align-items-center">
         <div>
           <h6 class="mb-0">${transaction.text}</h6>
-          <small class="text-muted">${new Date(transaction.date).toLocaleTimeString()}</small>
+          <small class="text-muted">${transaction.date}</small>
         </div>
-        <span class="badge ${transaction.amount < 0 ? 'bg-danger' : 'bg-success'} rounded-pill">
-          ${sign}$${Math.abs(transaction.amount)}
-        </span>
+        <div class="d-flex align-items-center">
+          <span class="badge ${transaction.amount < 0 ? 'bg-danger' : 'bg-success'} rounded-pill me-2">
+            ${sign}$${Math.abs(transaction.amount)}
+          </span>
+          <button class="btn btn-sm btn-outline-primary me-1" onclick="editTransaction(${transaction.id})">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${transaction.id})">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
       </div>
     </div>
   `;
 }
 
 // Load and display transactions
+// Delete transaction
+async function deleteTransaction(id) {
+    if (!db) {
+        console.error('Database not initialized');
+        return;
+    }
+
+    const transaction = db.transaction(['transactions'], 'readonly');
+    const store = transaction.objectStore('transactions');
+    const request = store.get(id);
+
+    request.onsuccess = () => {
+        const tx = request.result;
+        if (tx) {
+            transactionToDelete = tx;
+
+            // Populate the delete modal with transaction details
+            document.getElementById('deleteTransactionText').textContent = tx.text;
+            document.getElementById('deleteTransactionAmount').textContent =
+                `${tx.amount < 0 ? '-' : '+'}$${Math.abs(tx.amount)}`;
+            document.getElementById('deleteTransactionDate').textContent =
+                new Date(tx.date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+            // Show the delete modal
+            deleteModal.show();
+        }
+    };
+}
+
+let editModal;
+let deleteModal;
+let currentTransaction;
+let transactionToDelete;
+
+// Initialize modals and form handlers
+function initializeModals() {
+    // Initialize edit modal
+    editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    const editForm = document.getElementById('editForm');
+    const editText = document.getElementById('editText');
+    const editDescCounter = document.getElementById('editDescCounter');
+    const editDate = document.getElementById('editDate');
+    const saveButton = document.getElementById('saveEdit');
+
+    // Initialize delete modal
+    deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
+
+    // Delete confirmation handler
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (!db || !transactionToDelete) {
+            console.error('Database not initialized or no transaction selected');
+            return;
+        }
+
+        const transaction = db.transaction(['transactions'], 'readwrite');
+        const store = transaction.objectStore('transactions');
+        const request = store.delete(transactionToDelete.id);
+
+        request.onsuccess = () => {
+            deleteModal.hide();
+            loadTransactionHistory(); // Reload to update totals
+        };
+    });
+
+    // Character counter for description
+    editText.addEventListener('input', (e) => {
+        const length = e.target.value.length;
+        editDescCounter.textContent = `${length} / 80`;
+    });
+
+    // Date validation
+    editDate.max = new Date().toISOString().split('T')[0];
+
+    // Save button handler
+    saveButton.addEventListener('click', () => {
+        const form = document.getElementById('editForm');
+        if (form.checkValidity()) {
+            saveEditedTransaction();
+        } else {
+            form.reportValidity();
+        }
+    });
+}
+
+// Edit transaction
+function editTransaction(id) {
+    if (!db) {
+        console.error('Database not initialized');
+        return;
+    }
+
+    const transaction = db.transaction(['transactions'], 'readonly');
+    const store = transaction.objectStore('transactions');
+    const request = store.get(id);
+
+    request.onsuccess = () => {
+        const tx = request.result;
+        if (tx) {
+            currentTransaction = tx;
+
+            // Populate the modal form
+            document.getElementById('editTransactionId').value = tx.id;
+            document.getElementById('editText').value = tx.text;
+            document.getElementById('editAmount').value = tx.amount;
+            document.getElementById('editDate').value = tx.date;
+            document.getElementById('editDescCounter').textContent = `${tx.text.length} / 80`;
+
+            // Show the modal
+            editModal.show();
+        }
+    };
+}
+
+// Save edited transaction
+function saveEditedTransaction() {
+    const text = document.getElementById('editText').value.trim();
+    const amount = parseFloat(document.getElementById('editAmount').value);
+    const date = document.getElementById('editDate').value;
+
+    if (text && !isNaN(amount) && date) {
+        const updatedTx = {
+            ...currentTransaction,
+            text: text,
+            amount: amount,
+            date: date
+        };
+
+        const updateTx = db.transaction(['transactions'], 'readwrite');
+        const updateStore = updateTx.objectStore('transactions');
+        const updateRequest = updateStore.put(updatedTx);
+
+        updateRequest.onsuccess = () => {
+            editModal.hide();
+            loadTransactionHistory(); // Reload to show updated data
+        };
+    }
+}
+
 async function loadTransactionHistory() {
     try {
         if (!db) {
@@ -91,7 +242,8 @@ async function loadTransactionHistory() {
             const request = store.getAll();
             request.onsuccess = () => resolve(request.result || []);
             request.onerror = () => reject(request.error);
-        }); const groupedTransactions = groupTransactionsByDate(transactions);
+        });
+        const groupedTransactions = groupTransactionsByDate(transactions);
         let historyHTML = '';
 
         for (const [date, txs] of Object.entries(groupedTransactions)) {
@@ -140,6 +292,7 @@ async function initializeApp() {
     try {
         await initDB();
         console.log('Database initialized successfully');
+        initializeModals();
         await loadTransactionHistory();
     } catch (error) {
         console.error('Error:', error);

@@ -54,31 +54,31 @@
           </div>
         </div>
 
-        <div class="card mb-4">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h3 class="card-title mb-0">Recent Transactions</h3>
-              <a href="history.html" class="btn btn-outline-primary btn-sm">View All</a>
-            </div>
-            <ul id="list" class="list list-group list-group-flush">
-              <!-- Recent transactions will be added here -->
-            </ul>
-          </div>
-        </div>
-
         <div class="card">
           <div class="card-body">
             <h3 class="card-title">Add new transaction</h3>
             <form id="form">
               <div class="mb-3">
                 <label for="text" class="form-label">Description</label>
-                <input type="text" class="form-control" id="text" placeholder="Enter description..." />
+                <input type="text" class="form-control" id="text" maxlength="80" placeholder="Enter description..." />
+                <div class="form-text text-muted">
+                  <small id="desc-counter">0 / 80</small>
+                </div>
               </div>
               <div class="mb-3">
                 <label for="amount" class="form-label">Amount<br>
                   <small class="text-muted">(negative - expense, positive - income)</small>
                 </label>
                 <input type="number" class="form-control" id="amount" placeholder="Enter amount..." />
+              </div>
+              <div class="mb-3">
+                <label for="date" class="form-label">Date
+                  <small class="text-muted">(today or earlier only)</small>
+                </label>
+                <input type="date" class="form-control" id="date" max="" />
+              </div>
+              <div id="success-message" class="alert alert-success mt-3" style="display: none;">
+                Transaction added successfully!
               </div>
               <button type="submit" class="btn btn-primary w-100">Add transaction</button>
             </form>

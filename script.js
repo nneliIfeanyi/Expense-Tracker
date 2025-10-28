@@ -1,10 +1,12 @@
 const balance = document.getElementById('balance');
 const money_plus = document.getElementById('money-plus');
 const money_minus = document.getElementById('money-minus');
-const list = document.getElementById('list');
 const form = document.getElementById('form');
 const text = document.getElementById('text');
 const amount = document.getElementById('amount');
+const dateInput = document.getElementById('date');
+const descCounter = document.getElementById('desc-counter');
+const MAX_DESC = 80;
 
 // const dummyTransactions = [
 //   { id: 1, text: 'Flower', amount: -20 },
@@ -61,58 +63,63 @@ function addTransaction(e) {
 
   if (text.value.trim() === '' || amount.value.trim() === '') {
     alert('Please add a text and amount');
-  } else {
-    const transaction = {
-      id: generateID(),
-      text: text.value,
-      amount: +amount.value,
-      date: new Date().toISOString()
-    };
-
-    // Add to IndexedDB
-    const transaction_db = db.transaction(['transactions'], 'readwrite');
-    const store = transaction_db.objectStore('transactions');
-    const request = store.add(transaction);
-
-    request.onsuccess = () => {
-      transactions.push(transaction);
-      addTransactionDOM(transaction);
-      updateValues();
-      text.value = '';
-      amount.value = '';
-    };
-
-    request.onerror = () => {
-      alert('Error adding transaction');
-    };
+    return;
   }
+
+  const selectedDate = dateInput ? dateInput.value : new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (selectedDate > today) {
+    alert('Cannot add transactions for future dates');
+    return;
+  }
+
+  // Clean and enforce maxlength on description
+  let cleanedText = text.value.trim().replace(/\s+/g, ' ');
+  if (cleanedText.length > MAX_DESC) cleanedText = cleanedText.slice(0, MAX_DESC);
+
+  // Store just the date portion (YYYY-MM-DD)
+  const transactionDate = selectedDate;
+
+  const transaction = {
+    id: generateID(),
+    text: cleanedText,
+    amount: +amount.value,
+    date: transactionDate
+  };
+
+  // Add to IndexedDB
+  const transaction_db = db.transaction(['transactions'], 'readwrite');
+  const store = transaction_db.objectStore('transactions');
+  const request = store.add(transaction);
+
+  request.onsuccess = () => {
+    transactions.push(transaction);
+    updateValues();
+    text.value = '';
+    amount.value = '';
+    dateInput.value = '';
+
+    // Show success message
+    const successMsg = document.getElementById('success-message');
+    successMsg.style.display = 'block';
+    setTimeout(() => {
+      successMsg.style.display = 'none';
+    }, 3000);
+    if (descCounter) descCounter.textContent = `0 / ${MAX_DESC}`;
+  };
+
+  request.onerror = () => {
+    alert('Error adding transaction');
+  };
 }
+
 
 // Generate random ID
 function generateID() {
   return Math.floor(Math.random() * 100000000);
 }
 
-// Add transactions to DOM list
-function addTransactionDOM(transaction) {
-  // Get sign
-  const sign = transaction.amount < 0 ? '-' : '+';
-
-  const item = document.createElement('li');
-
-  // Add Bootstrap and custom classes
-  item.classList.add('list-group-item', transaction.amount < 0 ? 'minus' : 'plus');
-
-  item.innerHTML = `
-    <div class="d-flex justify-content-between align-items-center w-100">
-      <span>${transaction.text}</span>
-      <span>${sign}$${Math.abs(transaction.amount)}</span>
-    </div>
-    <button class="delete-btn" onclick="removeTransaction(${transaction.id})">×</button>
-  `;
-
-  list.appendChild(item);
-}
 
 // Update the balance, income and expense
 function updateValues() {
@@ -153,26 +160,36 @@ function removeTransaction(id) {
 
 // Init app
 async function init() {
-  list.innerHTML = '';
   await loadTransactions();
+  updateValues();
+}
 
-  // Sort transactions by date and get only the 5 most recent
-  const recentTransactions = [...transactions]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5);
-
-  if (recentTransactions.length === 0) {
-    list.innerHTML = `
-      <li class="list-group-item text-center text-muted">
-        <p class="mb-0">No recent transactions</p>
-        <small>Add a transaction to get started</small>
-      </li>
-    `;
-  } else {
-    recentTransactions.forEach(addTransactionDOM);
+// Live description counter and default date
+try {
+  if (dateInput) {
+    const today = new Date().toISOString().slice(0, 10);
+    dateInput.value = today;
+    dateInput.max = today;  // Prevent selecting future dates
   }
 
-  updateValues();
+  if (descCounter && text) {
+    // initialize counter
+    descCounter.textContent = `${text.value.length} / ${MAX_DESC}`;
+
+    text.addEventListener('input', () => {
+      // update counter
+      const len = text.value.length;
+      descCounter.textContent = `${len} / ${MAX_DESC}`;
+      // optional: prevent typing beyond maxlength (input has maxlength attr too)
+      if (len >= MAX_DESC) {
+        // truncate the value to MAX_DESC
+        text.value = text.value.slice(0, MAX_DESC);
+        descCounter.textContent = `${MAX_DESC} / ${MAX_DESC}`;
+      }
+    });
+  }
+} catch (e) {
+  // ignore if inputs not present or environment doesn't support
 }
 
 // Initialize the database and start the app
