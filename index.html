@@ -7,6 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <title>Expense Tracker</title>
 </head>
@@ -34,6 +35,10 @@
             <h1 id="balance" class="display-4">$0.00</h1>
           </div>
         </div>
+        <!-- Success message visible on dashboard when transaction added -->
+        <div id="success-message" class="alert alert-success mt-2" style="display:none;">
+          Transaction added successfully!
+        </div>
 
         <div class="row mb-4">
           <div class="col-6">
@@ -54,34 +59,77 @@
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-body">
-            <h3 class="card-title">Add new transaction</h3>
-            <form id="form">
-              <div class="mb-3">
-                <label for="text" class="form-label">Description</label>
-                <input type="text" class="form-control" id="text" maxlength="80" placeholder="Enter description..." />
-                <div class="form-text text-muted">
-                  <small id="desc-counter">0 / 80</small>
-                </div>
+        <!-- Percentage boxes below Income/Expense -->
+        <div class="row mb-4">
+          <div class="col-4">
+            <div class="card h-100 perc-box text-center">
+              <div class="card-body">
+                <h6 class="text-muted">Box 1 (10% of Income)</h6>
+                <p id="box1" class="mb-0 display-6">$0.00</p>
               </div>
-              <div class="mb-3">
-                <label for="amount" class="form-label">Amount<br>
-                  <small class="text-muted">(negative - expense, positive - income)</small>
-                </label>
-                <input type="number" class="form-control" id="amount" placeholder="Enter amount..." />
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="card h-100 perc-box text-center">
+              <div class="card-body">
+                <h6 class="text-muted">Box 2 (50% of Income)</h6>
+                <p id="box2" class="mb-0 display-6">$0.00</p>
               </div>
-              <div class="mb-3">
-                <label for="date" class="form-label">Date
-                  <small class="text-muted">(today or earlier only)</small>
-                </label>
-                <input type="date" class="form-control" id="date" max="" />
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="card h-100 perc-box text-center">
+              <div class="card-body">
+                <h6 class="text-muted">Box 3 (40% of Income)</h6>
+                <p id="box3" class="mb-0 display-6">$0.00</p>
               </div>
-              <div id="success-message" class="alert alert-success mt-3" style="display: none;">
-                Transaction added successfully!
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Add Button (opens Add Transaction modal) -->
+        <button id="fabAdd" class="btn btn-primary fab" data-bs-toggle="modal" data-bs-target="#addModal"
+          aria-label="Add transaction">
+          <i class="bi bi-plus-lg" style="font-size: 1.25rem;"></i>
+        </button>
+
+        <!-- Add Transaction Modal -->
+        <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add Transaction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <button type="submit" class="btn btn-primary w-100">Add transaction</button>
-            </form>
+              <div class="modal-body">
+                <form id="form">
+                  <div class="mb-3">
+                    <label for="text" class="form-label">Description</label>
+                    <input type="text" class="form-control" id="text" maxlength="80"
+                      placeholder="Enter description..." />
+                    <div class="form-text text-muted">
+                      <small id="desc-counter">0 / 80</small>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="amount" class="form-label">Amount<br>
+                      <small class="text-muted">(negative - expense, positive - income)</small>
+                    </label>
+                    <input type="number" class="form-control" id="amount" placeholder="Enter amount..." />
+                  </div>
+                  <div class="mb-3">
+                    <label for="date" class="form-label">Date
+                      <small class="text-muted">(today or earlier only)</small>
+                    </label>
+                    <input type="date" class="form-control" id="date" max="" />
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitAdd">Add transaction</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

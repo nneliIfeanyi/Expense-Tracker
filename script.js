@@ -100,12 +100,25 @@ function addTransaction(e) {
     amount.value = '';
     dateInput.value = '';
 
+    // Hide add modal (if present)
+    try {
+      const addModalEl = document.getElementById('addModal');
+      if (addModalEl) {
+        const modalInstance = bootstrap.Modal.getInstance(addModalEl) || new bootstrap.Modal(addModalEl);
+        modalInstance.hide();
+      }
+    } catch (e) {
+      // ignore if bootstrap not available
+    }
+
     // Show success message
     const successMsg = document.getElementById('success-message');
-    successMsg.style.display = 'block';
-    setTimeout(() => {
-      successMsg.style.display = 'none';
-    }, 3000);
+    if (successMsg) {
+      successMsg.style.display = 'block';
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 3000);
+    }
     if (descCounter) descCounter.textContent = `0 / ${MAX_DESC}`;
   };
 
@@ -125,21 +138,34 @@ function generateID() {
 function updateValues() {
   const amounts = transactions.map(transaction => transaction.amount);
 
-  const total = amounts.reduce((acc, item) => (acc += item), 0).toFixed(2);
+  const totalNum = amounts.reduce((acc, item) => (acc += item), 0);
+  const total = totalNum.toFixed(2);
 
-  const income = amounts
+  const incomeNum = amounts
     .filter(item => item > 0)
-    .reduce((acc, item) => (acc += item), 0)
-    .toFixed(2);
+    .reduce((acc, item) => (acc += item), 0);
+  const income = incomeNum.toFixed(2);
 
-  const expense = (
-    amounts.filter(item => item < 0).reduce((acc, item) => (acc += item), 0) *
-    -1
-  ).toFixed(2);
+  const expenseNum = (
+    amounts.filter(item => item < 0).reduce((acc, item) => (acc += item), 0) * -1
+  );
+  const expense = expenseNum.toFixed(2);
 
   balance.innerText = `$${total}`;
   money_plus.innerText = `$${income}`;
   money_minus.innerText = `$${expense}`;
+
+  // Update percentage boxes (10%,50%,40% of total income)
+  try {
+    const box1 = document.getElementById('box1');
+    const box2 = document.getElementById('box2');
+    const box3 = document.getElementById('box3');
+    if (box1) box1.innerText = `$${(incomeNum * 0.10).toFixed(2)}`;
+    if (box2) box2.innerText = `$${(incomeNum * 0.50).toFixed(2)}`;
+    if (box3) box3.innerText = `$${(incomeNum * 0.40).toFixed(2)}`;
+  } catch (e) {
+    // ignore if boxes are not in DOM
+  }
 }
 
 // Remove transaction by ID
@@ -199,5 +225,21 @@ initDB()
     console.error('Failed to initialize database:', error);
     alert('Could not load the expense tracker database');
   });
+
+// Wire modal submit button to submit the form (if present)
+try {
+  const submitAdd = document.getElementById('submitAdd');
+  if (submitAdd) {
+    submitAdd.addEventListener('click', () => {
+      // use requestSubmit if available to trigger native submit
+      if (form) {
+        if (typeof form.requestSubmit === 'function') form.requestSubmit();
+        else form.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    });
+  }
+} catch (e) {
+  // ignore
+}
 
 form.addEventListener('submit', addTransaction);
