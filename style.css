@@ -1,8 +1,25 @@
-@import url('https://fonts.googleapis.com/css?family=Lato&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Lato&family=Righteous&display=swap');
 
 body {
   font-family: 'Lato', sans-serif;
   background-color: #f8f9fa;
+}
+
+/* Custom app name in navbar */
+.navbar-brand.app-name {
+  font-family: 'Righteous', cursive;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: linear-gradient(45deg, #fff, #e6e9ff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.navbar-brand.app-name:hover {
+  transform: scale(1.05);
 }
 
 /* Custom styling for money display */
