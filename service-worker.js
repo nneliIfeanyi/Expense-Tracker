@@ -1,4 +1,4 @@
-const CACHE_NAME = 'expense-tracker-v1';
+const CACHE_NAME = 'onefifth-v1';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
@@ -9,7 +9,9 @@ const ASSETS_TO_CACHE = [
     '/manifest.json',
     '/offline.html',
     '/icons/icon-192.png',
-    '/icons/icon-512.png'
+    '/icons/icon-512.png',
+    '/icons/icon-192.svg',
+    '/icons/icon-512.svg'
 ];
 
 self.addEventListener('install', (event) => {

@@ -1,11 +1,11 @@
 {
-    "name": "Expense Tracker",
-    "short_name": "Expenses",
+    "name": "onefifth",
+    "short_name": "onefifth",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#0d6efd",
-    "description": "Track income and expenses offline-first",
+    "description": "onefifth — track income and expenses (1/5 budget split) — offline-first",
     "icons": [
         {
             "src": "/icons/icon-192.svg",

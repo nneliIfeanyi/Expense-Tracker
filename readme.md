@@ -1,6 +1,6 @@
-## Expense Tracker
+## onefifth
 
-A modern, responsive expense tracking application that helps you manage your income and expenses with a user-friendly interface and powerful features.
+A modern, responsive expense tracking application (onefifth) that helps you manage your income and expenses with a user-friendly interface and powerful features.
 
 ## Key Features
 
@@ -26,7 +26,7 @@ A modern, responsive expense tracking application that helps you manage your inc
 
 ## Project Structure
 ```
-expense-tracker/
+onefifth/
 ├── index.html      # Dashboard page
 ├── history.html    # Transaction history page
 ├── script.js       # Main application logic
