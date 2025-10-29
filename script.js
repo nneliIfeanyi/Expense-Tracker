@@ -25,12 +25,114 @@ const LS_PCTS_KEY = 'expense_tracker_pcts_v1';
 // ];
 
 // Initialize IndexedDB
-const dbName = 'ExpenseTrackerDB';
+const OLD_DB_NAME = 'ExpenseTrackerDB';
+const dbName = 'onefifthDB';
 const dbVersion = 2;
 let db;
 
+// Helper: check if a database exists (uses indexedDB.databases() when available)
+async function databaseExists(name) {
+  if (typeof indexedDB.databases === 'function') {
+    try {
+      const dbs = await indexedDB.databases();
+      return dbs.some(d => d.name === name);
+    } catch (e) {
+      // fallthrough to fallback
+    }
+  }
+
+  // Fallback: attempt to open the DB and detect upgrade
+  return new Promise((resolve) => {
+    let upgraded = false;
+    const req = indexedDB.open(name);
+    req.onupgradeneeded = () => {
+      upgraded = true; // DB didn't exist (or schema upgrade would run)
+    };
+    req.onsuccess = (ev) => {
+      const opened = ev.target.result;
+      opened.close();
+      if (upgraded) {
+        // remove the accidentally created DB
+        indexedDB.deleteDatabase(name).onsuccess = () => resolve(false);
+      } else resolve(true);
+    };
+    req.onerror = () => resolve(false);
+  });
+}
+
+async function migrateOldDBIfNeeded() {
+  if (OLD_DB_NAME === dbName) return; // nothing to do
+  const exists = await databaseExists(OLD_DB_NAME);
+  if (!exists) return; // no old DB to migrate
+
+  // Read old DB data
+  const oldOpenReq = indexedDB.open(OLD_DB_NAME);
+  const oldData = { transactions: [], settings: null };
+  await new Promise((resolve) => {
+    oldOpenReq.onsuccess = () => {
+      const oldDb = oldOpenReq.result;
+      if (oldDb.objectStoreNames.contains('transactions')) {
+        const tx = oldDb.transaction(['transactions'], 'readonly');
+        const store = tx.objectStore('transactions');
+        const getAllReq = store.getAll();
+        getAllReq.onsuccess = () => { oldData.transactions = getAllReq.result || []; };
+      }
+      if (oldDb.objectStoreNames.contains('settings')) {
+        const tx2 = oldDb.transaction(['settings'], 'readonly');
+        const store2 = tx2.objectStore('settings');
+        const getReq = store2.get('dashboard');
+        getReq.onsuccess = () => { oldData.settings = (getReq.result && getReq.result.value) || null; };
+      }
+      // wait a tick to ensure async gets finished
+      setTimeout(() => { oldDb.close(); resolve(); }, 200);
+    };
+    oldOpenReq.onerror = () => resolve();
+  });
+
+  // Open (or create) new DB and import data
+  const newOpenReq = indexedDB.open(dbName, dbVersion);
+  newOpenReq.onupgradeneeded = (event) => {
+    const newDb = event.target.result;
+    if (!newDb.objectStoreNames.contains('transactions')) {
+      const store = newDb.createObjectStore('transactions', { keyPath: 'id' });
+      store.createIndex('date', 'date', { unique: false });
+    }
+    if (!newDb.objectStoreNames.contains('settings')) {
+      newDb.createObjectStore('settings', { keyPath: 'key' });
+    }
+  };
+  await new Promise((resolve) => {
+    newOpenReq.onsuccess = () => {
+      const newDb = newOpenReq.result;
+      // import transactions
+      if (oldData.transactions && oldData.transactions.length) {
+        const tx = newDb.transaction(['transactions'], 'readwrite');
+        const store = tx.objectStore('transactions');
+        oldData.transactions.forEach(t => {
+          try { store.put(t); } catch (e) { /* ignore */ }
+        });
+      }
+      // import settings
+      if (oldData.settings) {
+        const tx2 = newDb.transaction(['settings'], 'readwrite');
+        const store2 = tx2.objectStore('settings');
+        try { store2.put({ key: 'dashboard', value: oldData.settings }); } catch (e) { }
+      }
+      newDb.close();
+      resolve();
+    };
+    newOpenReq.onerror = () => resolve();
+  });
+}
+
 const initDB = () => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await migrateOldDBIfNeeded();
+    } catch (e) {
+      console.warn('Migration check failed', e);
+    }
+
     const request = indexedDB.open(dbName, dbVersion);
 
     request.onerror = () => reject(request.error);

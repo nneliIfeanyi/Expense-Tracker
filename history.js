@@ -1,5 +1,5 @@
 // Database initialization (same as in script.js)
-const dbName = 'ExpenseTrackerDB';
+const dbName = 'onefifthDB';
 const dbVersion = 2;
 let db;
 
