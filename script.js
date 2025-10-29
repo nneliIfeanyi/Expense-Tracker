@@ -250,7 +250,7 @@ function applyDarkMode(enabled) {
   try {
     if (enabled) document.body.classList.add('dark-mode');
     else document.body.classList.remove('dark-mode');
-  } catch (e) {}
+  } catch (e) { }
 }
 // Save percentages (expects decimals that sum to ~1)
 function savePercentages(p1, p2, p3) {
@@ -290,7 +290,7 @@ async function init() {
       if (SETTINGS.dark) { darkIcon.classList.remove('bi-moon-fill'); darkIcon.classList.add('bi-sun-fill'); }
       else { darkIcon.classList.remove('bi-sun-fill'); darkIcon.classList.add('bi-moon-fill'); }
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // Live description counter and default date
