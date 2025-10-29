@@ -11,6 +11,9 @@ const MAX_DESC = 80;
 // Default percentage split (stored as decimals)
 const DEFAULT_PCTS = { p1: 0.10, p2: 0.50, p3: 0.40 };
 
+// Default settings
+const DEFAULT_SETTINGS = { p1: DEFAULT_PCTS.p1, p2: DEFAULT_PCTS.p2, p3: DEFAULT_PCTS.p3, dark: false };
+
 // Keys used in localStorage
 const LS_PCTS_KEY = 'expense_tracker_pcts_v1';
 
@@ -23,7 +26,7 @@ const LS_PCTS_KEY = 'expense_tracker_pcts_v1';
 
 // Initialize IndexedDB
 const dbName = 'ExpenseTrackerDB';
-const dbVersion = 1;
+const dbVersion = 2;
 let db;
 
 const initDB = () => {
@@ -41,6 +44,10 @@ const initDB = () => {
       if (!db.objectStoreNames.contains('transactions')) {
         const store = db.createObjectStore('transactions', { keyPath: 'id' });
         store.createIndex('date', 'date', { unique: false });
+      }
+      // create settings store to persist UI preferences
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings', { keyPath: 'key' });
       }
     };
   });
@@ -176,22 +183,75 @@ function updateValues() {
 }
 
 
-// Load percentages from localStorage or return defaults
-function loadPercentages() {
-  try {
-    const raw = localStorage.getItem(LS_PCTS_KEY);
-    if (!raw) return DEFAULT_PCTS;
-    const parsed = JSON.parse(raw);
-    // ensure numbers and fallback to defaults for missing fields
-    const p1 = typeof parsed.p1 === 'number' ? parsed.p1 : DEFAULT_PCTS.p1;
-    const p2 = typeof parsed.p2 === 'number' ? parsed.p2 : DEFAULT_PCTS.p2;
-    const p3 = typeof parsed.p3 === 'number' ? parsed.p3 : DEFAULT_PCTS.p3;
-    return { p1, p2, p3 };
-  } catch (e) {
-    return DEFAULT_PCTS;
-  }
+
+
+// In-memory settings cache (populated at startup)
+let SETTINGS = null;
+
+// Initialize settings from IndexedDB into SETTINGS cache
+async function initSettings() {
+  if (!db) return;
+  return new Promise((resolve) => {
+    const tx = db.transaction(['settings'], 'readonly');
+    const store = tx.objectStore('settings');
+    const req = store.get('dashboard');
+    req.onsuccess = () => {
+      if (req.result && req.result.value) {
+        SETTINGS = req.result.value;
+      } else {
+        SETTINGS = { ...DEFAULT_SETTINGS };
+        // persist defaults
+        const tx2 = db.transaction(['settings'], 'readwrite');
+        const store2 = tx2.objectStore('settings');
+        store2.put({ key: 'dashboard', value: SETTINGS });
+      }
+      // apply dark mode if needed
+      applyDarkMode(SETTINGS.dark);
+      resolve();
+    };
+    req.onerror = () => {
+      SETTINGS = { ...DEFAULT_SETTINGS };
+      applyDarkMode(SETTINGS.dark);
+      resolve();
+    };
+  });
 }
 
+// Load percentages from in-memory SETTINGS
+function loadPercentages() {
+  if (!SETTINGS) return DEFAULT_PCTS;
+  return { p1: SETTINGS.p1, p2: SETTINGS.p2, p3: SETTINGS.p3 };
+}
+
+// Save percentages to IndexedDB and update cache
+function savePercentages(p1, p2, p3) {
+  if (!db) {
+    // fallback to updating cache only
+    SETTINGS = { p1, p2, p3, dark: (SETTINGS && SETTINGS.dark) || false };
+    return;
+  }
+  SETTINGS = { p1: Number(p1), p2: Number(p2), p3: Number(p3), dark: (SETTINGS && SETTINGS.dark) || false };
+  const tx = db.transaction(['settings'], 'readwrite');
+  const store = tx.objectStore('settings');
+  store.put({ key: 'dashboard', value: SETTINGS });
+}
+
+// Save dark mode preference
+function saveDarkMode(isDark) {
+  if (!SETTINGS) SETTINGS = { ...DEFAULT_SETTINGS };
+  SETTINGS.dark = !!isDark;
+  if (!db) return;
+  const tx = db.transaction(['settings'], 'readwrite');
+  const store = tx.objectStore('settings');
+  store.put({ key: 'dashboard', value: SETTINGS });
+}
+
+function applyDarkMode(enabled) {
+  try {
+    if (enabled) document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
+  } catch (e) {}
+}
 // Save percentages (expects decimals that sum to ~1)
 function savePercentages(p1, p2, p3) {
   try {
@@ -222,6 +282,15 @@ function removeTransaction(id) {
 async function init() {
   await loadTransactions();
   updateValues();
+  // Apply UI settings after loading data
+  try {
+    // ensure dark mode icon matches persisted setting
+    const darkIcon = document.getElementById('darkIcon');
+    if (SETTINGS && darkIcon) {
+      if (SETTINGS.dark) { darkIcon.classList.remove('bi-moon-fill'); darkIcon.classList.add('bi-sun-fill'); }
+      else { darkIcon.classList.remove('bi-sun-fill'); darkIcon.classList.add('bi-moon-fill'); }
+    }
+  } catch (e) {}
 }
 
 // Live description counter and default date
@@ -254,9 +323,10 @@ try {
 
 // Initialize the database and start the app
 initDB()
+  .then(() => initSettings())
   .then(() => init())
   .catch(error => {
-    console.error('Failed to initialize database:', error);
+    console.error('Failed to initialize database or settings:', error);
     alert('Could not load the expense tracker database');
   });
 
@@ -316,9 +386,63 @@ try {
       try {
         const modal = bootstrap.Modal.getInstance(settingsModalEl) || new bootstrap.Modal(settingsModalEl);
         modal.hide();
-      } catch (e) {}
+      } catch (e) { }
     });
   }
 } catch (e) {
   // ignore if settings elements not present
+}
+
+// Initialize tooltips, presets and dark mode toggle
+try {
+  // Tooltips
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+    new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+
+  // Preset selector wiring
+  const presetSelect = document.getElementById('presetSelect');
+  if (presetSelect) {
+    presetSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      const map = {
+        'default': [10, 50, 40],
+        'savings': [20, 50, 30],
+        'bills': [10, 60, 30],
+        'custom': null
+      };
+      const arr = map[val];
+      if (arr) {
+        if (document.getElementById('pct1')) document.getElementById('pct1').value = arr[0];
+        if (document.getElementById('pct2')) document.getElementById('pct2').value = arr[1];
+        if (document.getElementById('pct3')) document.getElementById('pct3').value = arr[2];
+      }
+    });
+  }
+
+  // Dark mode toggle wiring
+  const darkToggle = document.getElementById('darkToggle');
+  const darkIcon = document.getElementById('darkIcon');
+  if (darkToggle) {
+    // ensure icon reflects current setting (if available)
+    if (SETTINGS && SETTINGS.dark) {
+      if (darkIcon) { darkIcon.classList.remove('bi-moon-fill'); darkIcon.classList.add('bi-sun-fill'); }
+    } else {
+      if (darkIcon) { darkIcon.classList.remove('bi-sun-fill'); darkIcon.classList.add('bi-moon-fill'); }
+    }
+
+    darkToggle.addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark-mode');
+      // toggle icon
+      if (darkIcon) {
+        if (isDark) { darkIcon.classList.remove('bi-moon-fill'); darkIcon.classList.add('bi-sun-fill'); }
+        else { darkIcon.classList.remove('bi-sun-fill'); darkIcon.classList.add('bi-moon-fill'); }
+      }
+      // persist
+      saveDarkMode(isDark);
+    });
+  }
+} catch (e) {
+  // ignore small UI wiring errors
 }

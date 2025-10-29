@@ -124,3 +124,22 @@ body {
   font-size: 1.25rem;
   font-weight: 600;
 }
+
+/* Dark mode styles */
+.dark-mode {
+  background-color: #121212;
+  color: #e9ecef;
+}
+.dark-mode .card {
+  background-color: #1e1e1e;
+  color: #e9ecef;
+  border-color: rgba(255,255,255,0.03);
+}
+.dark-mode .navbar {
+  background-color: #0d6efd; /* keep primary but slightly brighter */
+}
+.dark-mode .list-group-item {
+  background-color: #181818;
+}
+.dark-mode .money.plus { color: #6ee7b7; }
+.dark-mode .money.minus { color: #ff8b94; }
