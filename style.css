@@ -212,3 +212,48 @@ body {
 .dark-mode .money.minus {
   color: #ff8b94;
 }
+
+/* Additional dark mode contrast fixes */
+.dark-mode,
+.dark-mode body,
+.dark-mode .container,
+.dark-mode .card,
+.dark-mode .card-body,
+.dark-mode .modal-content,
+.dark-mode .list-group-item {
+  color: #e9ecef;
+}
+
+.dark-mode .text-muted,
+.dark-mode small,
+.dark-mode .form-text,
+.dark-mode .card-title,
+.dark-mode .card-subtitle,
+.dark-mode label,
+.dark-mode .btn-link,
+.dark-mode .nav-link,
+.dark-mode .navbar-brand,
+.dark-mode .alert,
+.dark-mode .modal-title {
+  color: #cbd5e1 !important;
+}
+
+.dark-mode a {
+  color: #9fcdff;
+}
+
+.dark-mode .alert {
+  background-color: #24303a;
+  color: #e9ecef;
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+.dark-mode .btn-link {
+  color: #e9ecef;
+}
+
+.dark-mode .btn-secondary {
+  background-color: #3a3a3a;
+  border-color: #444;
+  color: #e9ecef;
+}
