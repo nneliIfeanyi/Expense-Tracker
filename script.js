@@ -561,3 +561,51 @@ try {
 } catch (e) {
   // ignore
 }
+
+// PWA install prompt
+let deferredPrompt;
+
+// Listen for beforeinstallprompt event
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  // Stash the event so it can be triggered later
+  deferredPrompt = e;
+  // Show the install button
+  const installContainer = document.getElementById('installContainer');
+  if (installContainer) installContainer.classList.remove('d-none');
+});
+
+// When the app is installed, hide the install button
+window.addEventListener('appinstalled', () => {
+  const installContainer = document.getElementById('installContainer');
+  if (installContainer) installContainer.classList.add('d-none');
+  deferredPrompt = null;
+});
+
+// Check if already installed or running in standalone mode
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+  const installContainer = document.getElementById('installContainer');
+  if (installContainer) installContainer.classList.add('d-none');
+}
+
+// Handle install button click
+try {
+  const installBtn = document.getElementById('installPWA');
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      // Show the prompt
+      deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      // We've used the prompt, and can't use it again, clear it
+      deferredPrompt = null;
+      // Hide the install button
+      const installContainer = document.getElementById('installContainer');
+      if (installContainer) installContainer.classList.add('d-none');
+    });
+  }
+} catch (e) {
+  // ignore if button not in DOM
+}
