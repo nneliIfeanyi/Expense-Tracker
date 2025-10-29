@@ -1,6 +1,6 @@
 // Database initialization (same as in script.js)
 const dbName = 'ExpenseTrackerDB';
-const dbVersion = 1;
+const dbVersion = 2;
 let db;
 
 const historyContainer = document.getElementById('history-container');
@@ -20,6 +20,10 @@ const initDB = () => {
             if (!db.objectStoreNames.contains('transactions')) {
                 const store = db.createObjectStore('transactions', { keyPath: 'id' });
                 store.createIndex('date', 'date', { unique: false });
+            }
+            // ensure settings store exists (schema v2)
+            if (!db.objectStoreNames.contains('settings')) {
+                db.createObjectStore('settings', { keyPath: 'key' });
             }
         };
     });
