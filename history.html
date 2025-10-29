@@ -13,17 +13,24 @@
 </head>
 
 <body>
-    <nav class="navbar bg-primary mb-4">
+    <nav class="navbar navbar-expand-sm navbar-dark bg-primary mb-4">
         <div class="container">
-            <a href="index.html" class="navbar-brand text-white">Expense Tracker</a>
-            <ul class="navbar-nav ms-auto flex-row">
-                <li class="nav-item">
-                    <a href="index.html" class="nav-link text-white me-3">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a href="history.html" class="nav-link text-white active">History</a>
-                </li>
-            </ul>
+            <a href="index.html" class="navbar-brand">Expense Tracker</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbarHistory"
+                aria-controls="mainNavbarHistory" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbarHistory">
+                <ul class="navbar-nav ms-auto mb-2 mb-sm-0">
+                    <li class="nav-item">
+                        <a href="index.html" class="nav-link">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="history.html" class="nav-link active">History</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 

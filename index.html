@@ -15,28 +15,36 @@
 </head>
 
 <body>
-  <nav class="navbar bg-primary mb-4">
+  <nav class="navbar navbar-expand-sm navbar-dark bg-primary mb-4">
     <div class="container">
-      <a href="index.html" class="navbar-brand text-white">Expense Tracker</a>
-      <ul class="navbar-nav ms-auto flex-row">
-        <li class="nav-item">
-          <a href="index.html" class="nav-link text-white active me-3">Dashboard</a>
-        </li>
-        <li class="nav-item">
-          <a href="history.html" class="nav-link text-white">History</a>
-        </li>
-        <li class="nav-item">
-          <button id="darkToggle" class="btn btn-link nav-link text-white ms-2" title="Toggle dark mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
-            <i id="darkIcon" class="bi bi-moon-fill" style="font-size:1.1rem;color:#fff"></i>
-          </button>
-        </li>
-        <li class="nav-item">
-          <button id="openSettings" class="btn btn-link nav-link text-white ms-2" data-bs-toggle="modal"
-            data-bs-target="#settingsModal" title="Settings" data-bs-toggle="tooltip" data-bs-placement="bottom">
-            <i class="bi bi-gear-fill" style="font-size:1.1rem;color:#fff"></i>
-          </button>
-        </li>
-      </ul>
+      <a href="index.html" class="navbar-brand">Expense Tracker</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav ms-auto mb-2 mb-sm-0">
+          <li class="nav-item">
+            <a href="index.html" class="nav-link active">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a href="history.html" class="nav-link">History</a>
+          </li>
+          <li class="nav-item d-flex align-items-center">
+            <button id="darkToggle" class="btn btn-link nav-link text-white ms-2" title="Toggle dark mode"
+              data-bs-toggle="tooltip" data-bs-placement="bottom">
+              <i id="darkIcon" class="bi bi-moon-fill" style="font-size:1.1rem;color:#fff"></i>
+            </button>
+          </li>
+          <li class="nav-item d-flex align-items-center">
+            <button id="openSettings" class="btn btn-link nav-link text-white ms-2" data-bs-toggle="modal"
+              data-bs-target="#settingsModal" title="Settings" data-bs-placement="bottom">
+              <i class="bi bi-gear-fill" style="font-size:1.1rem;color:#fff"></i>
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
   </nav>
   <div class="container">
@@ -164,7 +172,8 @@
                       <option value="bills">Bills-first (10 / 60 / 30)</option>
                       <option value="custom">Custom</option>
                     </select>
-                    <div class="form-text">Choose a preset to quickly set percentages or select Custom to enter values manually.</div>
+                    <div class="form-text">Choose a preset to quickly set percentages or select Custom to enter values
+                      manually.</div>
                   </div>
                   <p class="small text-muted">Set the percentage split of total income for each box. Values must sum to
                     100%.</p>
