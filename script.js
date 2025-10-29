@@ -8,6 +8,12 @@ const dateInput = document.getElementById('date');
 const descCounter = document.getElementById('desc-counter');
 const MAX_DESC = 80;
 
+// Default percentage split (stored as decimals)
+const DEFAULT_PCTS = { p1: 0.10, p2: 0.50, p3: 0.40 };
+
+// Keys used in localStorage
+const LS_PCTS_KEY = 'expense_tracker_pcts_v1';
+
 // const dummyTransactions = [
 //   { id: 1, text: 'Flower', amount: -20 },
 //   { id: 2, text: 'Salary', amount: 300 },
@@ -160,11 +166,39 @@ function updateValues() {
     const box1 = document.getElementById('box1');
     const box2 = document.getElementById('box2');
     const box3 = document.getElementById('box3');
-    if (box1) box1.innerText = `$${(incomeNum * 0.10).toFixed(2)}`;
-    if (box2) box2.innerText = `$${(incomeNum * 0.50).toFixed(2)}`;
-    if (box3) box3.innerText = `$${(incomeNum * 0.40).toFixed(2)}`;
+    const pcts = loadPercentages();
+    if (box1) box1.innerText = `$${(incomeNum * pcts.p1).toFixed(2)}`;
+    if (box2) box2.innerText = `$${(incomeNum * pcts.p2).toFixed(2)}`;
+    if (box3) box3.innerText = `$${(incomeNum * pcts.p3).toFixed(2)}`;
   } catch (e) {
     // ignore if boxes are not in DOM
+  }
+}
+
+
+// Load percentages from localStorage or return defaults
+function loadPercentages() {
+  try {
+    const raw = localStorage.getItem(LS_PCTS_KEY);
+    if (!raw) return DEFAULT_PCTS;
+    const parsed = JSON.parse(raw);
+    // ensure numbers and fallback to defaults for missing fields
+    const p1 = typeof parsed.p1 === 'number' ? parsed.p1 : DEFAULT_PCTS.p1;
+    const p2 = typeof parsed.p2 === 'number' ? parsed.p2 : DEFAULT_PCTS.p2;
+    const p3 = typeof parsed.p3 === 'number' ? parsed.p3 : DEFAULT_PCTS.p3;
+    return { p1, p2, p3 };
+  } catch (e) {
+    return DEFAULT_PCTS;
+  }
+}
+
+// Save percentages (expects decimals that sum to ~1)
+function savePercentages(p1, p2, p3) {
+  try {
+    const obj = { p1: Number(p1), p2: Number(p2), p3: Number(p3) };
+    localStorage.setItem(LS_PCTS_KEY, JSON.stringify(obj));
+  } catch (e) {
+    console.error('Failed to save percentages', e);
   }
 }
 
@@ -243,3 +277,48 @@ try {
 }
 
 form.addEventListener('submit', addTransaction);
+
+// Settings modal wiring (configure percentage boxes)
+try {
+  const saveSettingsBtn = document.getElementById('saveSettings');
+  const pct1Input = document.getElementById('pct1');
+  const pct2Input = document.getElementById('pct2');
+  const pct3Input = document.getElementById('pct3');
+  const pctError = document.getElementById('pct-error');
+  const settingsModalEl = document.getElementById('settingsModal');
+
+  if (settingsModalEl) {
+    // Populate inputs when modal opens
+    settingsModalEl.addEventListener('show.bs.modal', () => {
+      const pcts = loadPercentages();
+      if (pct1Input) pct1Input.value = Math.round(pcts.p1 * 100);
+      if (pct2Input) pct2Input.value = Math.round(pcts.p2 * 100);
+      if (pct3Input) pct3Input.value = Math.round(pcts.p3 * 100);
+      if (pctError) pctError.style.display = 'none';
+    });
+  }
+
+  if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener('click', () => {
+      const v1 = Number(pct1Input.value || 0);
+      const v2 = Number(pct2Input.value || 0);
+      const v3 = Number(pct3Input.value || 0);
+      const sum = v1 + v2 + v3;
+      if (sum !== 100) {
+        if (pctError) pctError.style.display = 'block';
+        return;
+      }
+      // convert to decimals and save
+      savePercentages(v1 / 100, v2 / 100, v3 / 100);
+      // update UI immediately
+      updateValues();
+      // hide modal
+      try {
+        const modal = bootstrap.Modal.getInstance(settingsModalEl) || new bootstrap.Modal(settingsModalEl);
+        modal.hide();
+      } catch (e) {}
+    });
+  }
+} catch (e) {
+  // ignore if settings elements not present
+}

@@ -23,6 +23,11 @@
         <li class="nav-item">
           <a href="history.html" class="nav-link text-white">History</a>
         </li>
+          <li class="nav-item">
+            <button id="openSettings" class="btn btn-link nav-link text-white ms-2" data-bs-toggle="modal" data-bs-target="#settingsModal" title="Settings">
+              <i class="bi bi-gear-fill" style="font-size:1.1rem;color:#fff"></i>
+            </button>
+          </li>
       </ul>
     </div>
   </nav>
@@ -64,7 +69,7 @@
           <div class="col-4">
             <div class="card h-100 perc-box text-center">
               <div class="card-body">
-                <h6 class="text-muted">Box 1 (10% of Income)</h6>
+                <h6 class="text-muted">(10% of Income)</h6>
                 <p id="box1" class="mb-0 display-6">$0.00</p>
               </div>
             </div>
@@ -72,7 +77,7 @@
           <div class="col-4">
             <div class="card h-100 perc-box text-center">
               <div class="card-body">
-                <h6 class="text-muted">Box 2 (50% of Income)</h6>
+                <h6 class="text-muted">(50% of Income)</h6>
                 <p id="box2" class="mb-0 display-6">$0.00</p>
               </div>
             </div>
@@ -80,7 +85,7 @@
           <div class="col-4">
             <div class="card h-100 perc-box text-center">
               <div class="card-body">
-                <h6 class="text-muted">Box 3 (40% of Income)</h6>
+                <h6 class="text-muted">(40% of Income)</h6>
                 <p id="box3" class="mb-0 display-6">$0.00</p>
               </div>
             </div>
@@ -128,6 +133,39 @@
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="submitAdd">Add transaction</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Settings Modal -->
+        <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalLabel">Dashboard Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form id="settingsForm">
+                  <p class="small text-muted">Set the percentage split of total income for each box. Values must sum to 100%.</p>
+                  <div class="mb-3">
+                    <label for="pct1" class="form-label">Box 1 (%)</label>
+                    <input type="number" min="0" max="100" step="1" class="form-control" id="pct1" value="10" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="pct2" class="form-label">Box 2 (%)</label>
+                    <input type="number" min="0" max="100" step="1" class="form-control" id="pct2" value="50" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="pct3" class="form-label">Box 3 (%)</label>
+                    <input type="number" min="0" max="100" step="1" class="form-control" id="pct3" value="40" required>
+                  </div>
+                  <div id="pct-error" class="text-danger" style="display:none;">Percentages must add up to 100%.</div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveSettings">Save</button>
               </div>
             </div>
           </div>
