@@ -31,12 +31,22 @@ const initDB = () => {
 
 // Format date to readable string
 function formatDate(date) {
-    return new Date(date).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    // Short form: "Mon Oct 7" (no year)
+    const d = new Date(date);
+    const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+    const monthDay = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    // remove possible comma from monthDay and join
+    return `${weekday} ${monthDay.replace(',', '')}`;
+}
+
+// Currency formatter / helper (short, with grouping)
+function formatCurrency(value) {
+    const num = Number(value) || 0;
+    try {
+        return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 2 }).format(num);
+    } catch (e) {
+        return '₦' + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
 }
 
 // Group transactions by date
@@ -74,9 +84,9 @@ function createTransactionElement(transaction) {
           <small class="text-muted">${transaction.date}</small>
         </div>
         <div class="d-flex align-items-center">
-                    <span class="badge ${transaction.amount < 0 ? 'bg-danger' : 'bg-success'} rounded-pill me-2">
-                        ${sign}₦${Math.abs(transaction.amount)}
-                    </span>
+                                <span class="badge ${transaction.amount < 0 ? 'bg-danger' : 'bg-success'} rounded-pill me-2">
+                                    ${sign}${formatCurrency(Math.abs(transaction.amount))}
+                                </span>
           <button class="btn btn-sm btn-outline-primary me-1" onclick="editTransaction(${transaction.id})">
             <i class="bi bi-pencil"></i>
           </button>
@@ -278,7 +288,7 @@ async function loadTransactionHistory() {
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h5 class="mb-0">${formatDate(date)}</h5>
                             <span class="fw-bold ${totalClass}">
-                                ${dateTotal >= 0 ? '+' : '-'}₦${Math.abs(dateTotal).toFixed(2)}
+                                                ${dateTotal >= 0 ? '+' : '-'}${formatCurrency(Math.abs(dateTotal))}
                             </span>
           </div>
           <div class="list-group">

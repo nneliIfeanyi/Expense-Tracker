@@ -71,3 +71,12 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse || networkFetch;
     })());
 });
+
+// Listen for messages from clients (e.g., skip waiting)
+self.addEventListener('message', (event) => {
+    try {
+        if (event.data && event.data.type === 'SKIP_WAITING') {
+            self.skipWaiting();
+        }
+    } catch (e) { }
+});

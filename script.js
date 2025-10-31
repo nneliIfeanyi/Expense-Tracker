@@ -157,6 +157,23 @@ const initDB = () => {
 
 let transactions = [];
 
+// Currency formatter for Naira with grouping (commas)
+const CURRENCY_FORMATTER = new Intl.NumberFormat('en-NG', {
+  style: 'currency',
+  currency: 'NGN',
+  minimumFractionDigits: 2,
+});
+
+function formatCurrency(value) {
+  const num = Number(value) || 0;
+  try {
+    return CURRENCY_FORMATTER.format(num);
+  } catch (e) {
+    // Fallback: simple formatting with commas
+    return '₦' + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+}
+
 // Load all transactions from IndexedDB
 const loadTransactions = () => {
   return new Promise((resolve, reject) => {
@@ -266,9 +283,9 @@ function updateValues() {
   );
   const expense = expenseNum.toFixed(2);
 
-  balance.innerText = `₦${total}`;
-  money_plus.innerText = `₦${income}`;
-  money_minus.innerText = `₦${expense}`;
+  balance.innerText = formatCurrency(totalNum);
+  money_plus.innerText = formatCurrency(incomeNum);
+  money_minus.innerText = formatCurrency(expenseNum);
 
   // Update percentage boxes (10%,50%,40% of total income)
   try {
@@ -276,9 +293,9 @@ function updateValues() {
     const box2 = document.getElementById('box2');
     const box3 = document.getElementById('box3');
     const pcts = loadPercentages();
-    if (box1) box1.innerText = `₦${(incomeNum * pcts.p1).toFixed(2)}`;
-    if (box2) box2.innerText = `₦${(incomeNum * pcts.p2).toFixed(2)}`;
-    if (box3) box3.innerText = `₦${(incomeNum * pcts.p3).toFixed(2)}`;
+    if (box1) box1.innerText = formatCurrency(incomeNum * pcts.p1);
+    if (box2) box2.innerText = formatCurrency(incomeNum * pcts.p2);
+    if (box3) box3.innerText = formatCurrency(incomeNum * pcts.p3);
   } catch (e) {
     // ignore if boxes are not in DOM
   }
@@ -629,7 +646,13 @@ function createUpdateBanner() {
     </div>`;
   document.body.appendChild(banner);
   document.getElementById('sw-refresh').addEventListener('click', () => {
-    // try to reload to pick up new content controlled by the newly activated SW
+    // try to message the waiting service worker to skip waiting, then reload
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      try {
+        navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+      } catch (e) { }
+    }
+    // Hard reload to pick up new content
     window.location.reload(true);
   });
   document.getElementById('sw-dismiss').addEventListener('click', () => {
