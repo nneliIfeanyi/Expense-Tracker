@@ -503,25 +503,7 @@ try {
     new bootstrap.Tooltip(tooltipTriggerEl);
   });
 
-  // Preset selector wiring
-  const presetSelect = document.getElementById('presetSelect');
-  if (presetSelect) {
-    presetSelect.addEventListener('change', (e) => {
-      const val = e.target.value;
-      const map = {
-        'default': [10, 50, 40],
-        'savings': [20, 50, 30],
-        'bills': [10, 60, 30],
-        'custom': null
-      };
-      const arr = map[val];
-      if (arr) {
-        if (document.getElementById('pct1')) document.getElementById('pct1').value = arr[0];
-        if (document.getElementById('pct2')) document.getElementById('pct2').value = arr[1];
-        if (document.getElementById('pct3')) document.getElementById('pct3').value = arr[2];
-      }
-    });
-  }
+  // Preset selector removed — users will enter percentage values manually
 
   // Dark mode toggle wiring
   const darkToggle = document.getElementById('darkToggle');
@@ -609,3 +591,20 @@ try {
 } catch (e) {
   // ignore if button not in DOM
 }
+
+// Income/Expense card click handlers: navigate to history with filter query
+try {
+  const incomeCard = document.getElementById('incomeCard');
+  const expenseCard = document.getElementById('expenseCard');
+  function navToFilter(type) {
+    window.location.href = `history.html?filter=${encodeURIComponent(type)}`;
+  }
+  if (incomeCard) {
+    incomeCard.addEventListener('click', () => navToFilter('income'));
+    incomeCard.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navToFilter('income'); } });
+  }
+  if (expenseCard) {
+    expenseCard.addEventListener('click', () => navToFilter('expense'));
+    expenseCard.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navToFilter('expense'); } });
+  }
+} catch (e) { }

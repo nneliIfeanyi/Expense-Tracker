@@ -145,6 +145,17 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Clickable card utility */
+.clickable-card {
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.clickable-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(13, 110, 253, 0.08);
+}
+
 /* Dark mode styles */
 .dark-mode {
   background-color: #121212;

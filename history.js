@@ -247,7 +247,25 @@ async function loadTransactionHistory() {
             request.onsuccess = () => resolve(request.result || []);
             request.onerror = () => reject(request.error);
         });
-        const groupedTransactions = groupTransactionsByDate(transactions);
+        // Read optional filter from query string: 'income' or 'expense'
+        const params = new URLSearchParams(window.location.search);
+        const filter = params.get('filter');
+        let filtered = transactions;
+        if (filter === 'income') {
+            filtered = transactions.filter(t => Number(t.amount) > 0);
+        } else if (filter === 'expense') {
+            filtered = transactions.filter(t => Number(t.amount) < 0);
+        }
+        // Update page title or header to indicate active filter
+        try {
+            const titleEl = document.querySelector('.card-title');
+            if (titleEl) {
+                if (filter === 'income') titleEl.textContent = 'Transaction History — Income';
+                else if (filter === 'expense') titleEl.textContent = 'Transaction History — Expense';
+                else titleEl.textContent = 'Transaction History';
+            }
+        } catch (e) { }
+        const groupedTransactions = groupTransactionsByDate(filtered);
         let historyHTML = '';
 
         for (const [date, txs] of Object.entries(groupedTransactions)) {
