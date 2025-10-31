@@ -74,9 +74,9 @@ function createTransactionElement(transaction) {
           <small class="text-muted">${transaction.date}</small>
         </div>
         <div class="d-flex align-items-center">
-          <span class="badge ${transaction.amount < 0 ? 'bg-danger' : 'bg-success'} rounded-pill me-2">
-            ${sign}$${Math.abs(transaction.amount)}
-          </span>
+                    <span class="badge ${transaction.amount < 0 ? 'bg-danger' : 'bg-success'} rounded-pill me-2">
+                        ${sign}₦${Math.abs(transaction.amount)}
+                    </span>
           <button class="btn btn-sm btn-outline-primary me-1" onclick="editTransaction(${transaction.id})">
             <i class="bi bi-pencil"></i>
           </button>
@@ -277,9 +277,9 @@ async function loadTransactionHistory() {
         <div class="date-group mb-4">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h5 class="mb-0">${formatDate(date)}</h5>
-            <span class="fw-bold ${totalClass}">
-              ${dateTotal >= 0 ? '+' : '-'}$${Math.abs(dateTotal).toFixed(2)}
-            </span>
+                            <span class="fw-bold ${totalClass}">
+                                ${dateTotal >= 0 ? '+' : '-'}₦${Math.abs(dateTotal).toFixed(2)}
+                            </span>
           </div>
           <div class="list-group">
             ${txs.map(createTransactionElement).join('')}
