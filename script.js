@@ -276,9 +276,9 @@ function updateValues() {
     const box2 = document.getElementById('box2');
     const box3 = document.getElementById('box3');
     const pcts = loadPercentages();
-  if (box1) box1.innerText = `₦${(incomeNum * pcts.p1).toFixed(2)}`;
-  if (box2) box2.innerText = `₦${(incomeNum * pcts.p2).toFixed(2)}`;
-  if (box3) box3.innerText = `₦${(incomeNum * pcts.p3).toFixed(2)}`;
+    if (box1) box1.innerText = `₦${(incomeNum * pcts.p1).toFixed(2)}`;
+    if (box2) box2.innerText = `₦${(incomeNum * pcts.p2).toFixed(2)}`;
+    if (box3) box3.innerText = `₦${(incomeNum * pcts.p3).toFixed(2)}`;
   } catch (e) {
     // ignore if boxes are not in DOM
   }
