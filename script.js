@@ -608,3 +608,43 @@ try {
     expenseCard.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navToFilter('expense'); } });
   }
 } catch (e) { }
+
+// Service worker update notification: show a small in-app banner when a new SW version is available
+function createUpdateBanner() {
+  const existing = document.getElementById('sw-update-banner');
+  if (existing) return existing;
+  const banner = document.createElement('div');
+  banner.id = 'sw-update-banner';
+  banner.style.position = 'fixed';
+  banner.style.right = '16px';
+  banner.style.bottom = '16px';
+  banner.style.zIndex = '2000';
+  banner.innerHTML = `
+    <div class="toast show align-items-center text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">A new version is available.</div>
+        <button id="sw-refresh" type="button" class="btn btn-light btn-sm me-2">Refresh</button>
+        <button id="sw-dismiss" type="button" class="btn btn-outline-light btn-sm">Dismiss</button>
+      </div>
+    </div>`;
+  document.body.appendChild(banner);
+  document.getElementById('sw-refresh').addEventListener('click', () => {
+    // try to reload to pick up new content controlled by the newly activated SW
+    window.location.reload(true);
+  });
+  document.getElementById('sw-dismiss').addEventListener('click', () => {
+    banner.remove();
+  });
+  return banner;
+}
+
+// Listen for messages from the service worker
+if (navigator.serviceWorker && navigator.serviceWorker.addEventListener) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    try {
+      if (event.data && event.data.type === 'NEW_VERSION_AVAILABLE') {
+        createUpdateBanner();
+      }
+    } catch (e) { }
+  });
+}

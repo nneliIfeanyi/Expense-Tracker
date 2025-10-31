@@ -22,12 +22,19 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => Promise.all(
-            keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
-        ))
-    );
-    self.clients.claim();
+    event.waitUntil((async () => {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
+        // Claim clients immediately so the new SW controls pages
+        await self.clients.claim();
+        // Notify clients that a new version is active
+        const clients = await self.clients.matchAll({ includeUncontrolled: true });
+        for (const client of clients) {
+            try {
+                client.postMessage({ type: 'NEW_VERSION_AVAILABLE' });
+            } catch (e) { /* ignore */ }
+        }
+    })());
 });
 
 self.addEventListener('fetch', (event) => {
@@ -38,7 +45,6 @@ self.addEventListener('fetch', (event) => {
     if (req.mode === 'navigate') {
         event.respondWith(
             fetch(req).then((res) => {
-                // put a copy in cache for later
                 const copy = res.clone();
                 caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
                 return res;
@@ -47,11 +53,21 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // For other requests, serve from cache first, then network
-    event.respondWith(
-        caches.match(req).then((cached) => cached || fetch(req).then((res) => {
-            try { const copy = res.clone(); caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)); } catch (e) { }
-            return res;
-        }))
-    );
+    // For other requests: stale-while-revalidate
+    event.respondWith((async function () {
+        const cache = await caches.open(CACHE_NAME);
+        const cachedResponse = await cache.match(req);
+        const networkFetch = fetch(req).then((networkResponse) => {
+            // Only cache successful responses
+            try {
+                if (networkResponse && networkResponse.status === 200) {
+                    cache.put(req, networkResponse.clone());
+                }
+            } catch (e) { }
+            return networkResponse;
+        }).catch(() => { return null; });
+
+        // Return cached response immediately if available, otherwise wait for network
+        return cachedResponse || networkFetch;
+    })());
 });
